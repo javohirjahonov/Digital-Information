@@ -34,6 +34,7 @@ public class AuthController {
         return userService.save(userDto);
     }
 
+    @CrossOrigin(origins = "http://localhost:5173")
     @PostMapping("/sign-in")
     public StandardResponse<JwtResponse> signIn(
             @RequestBody LoginRequestDto loginDto
