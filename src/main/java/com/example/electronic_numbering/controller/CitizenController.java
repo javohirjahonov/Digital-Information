@@ -8,8 +8,11 @@ import com.example.electronic_numbering.domain.entity.citizen.CitizenEntity;
 import com.example.electronic_numbering.exception.RequestValidationException;
 import com.example.electronic_numbering.service.citizen.CitizenService;
 import com.itextpdf.text.DocumentException;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
@@ -91,11 +95,30 @@ public class CitizenController {
 
     @GetMapping("/get-citizen-pdf")
     public StandardResponse<String> getCitizenInformationPdf(
+            HttpServletResponse response,
             @RequestParam UUID citizenId
     ) {
         try {
             // Call the service method to generate the PDF
-            citizenService.writeInformationToPdf(citizenId);
+            CitizenInformationForPdf citizenInformation = citizenService.writeInformationToPdf(citizenId);
+
+            // Set response content type
+            response.setContentType("application/pdf");
+
+            // Set headers for the response to indicate file download
+            response.setHeader("Content-Disposition", "attachment; filename=Citizen_Information.pdf");
+
+            // Get the file input stream for the generated PDF
+            FileInputStream inputStream = new FileInputStream("Citizen_Information.pdf");
+
+            // Copy the PDF content to the response output stream
+            ServletOutputStream outputStream = response.getOutputStream();
+            IOUtils.copy(inputStream, outputStream);
+            outputStream.flush();
+
+            // Close streams
+            inputStream.close();
+            outputStream.close();
             return StandardResponse.<String>builder()
                     .status(Status.SUCCESS)
                     .message("Citizen information PDF generated successfully")
@@ -106,6 +129,8 @@ public class CitizenController {
                     .status(Status.ERROR)
                     .message("Failed to generate PDF: " + e.getMessage())
                     .build();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }
