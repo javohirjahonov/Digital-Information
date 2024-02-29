@@ -10,10 +10,15 @@ import com.example.electronic_numbering.service.citizen.CitizenService;
 import com.itextpdf.text.DocumentException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.security.Principal;
 import java.util.List;
@@ -85,15 +90,22 @@ public class CitizenController {
     }
 
     @GetMapping("/get-citizen-pdf")
-    public StandardResponse<CitizenInformationForPdf> getCitizenInformationPdf(
+    public StandardResponse<String> getCitizenInformationPdf(
             @RequestParam UUID citizenId
-    ) throws DocumentException, FileNotFoundException {
-        CitizenInformationForPdf citizenInformationForPdf = citizenService.writeInformationToPdf(citizenId);
-        return StandardResponse.<CitizenInformationForPdf>builder()
-                .status(Status.SUCCESS)
-                .data(citizenInformationForPdf)
-                .message("Citizen deleted")
-                .build();
+    ) {
+        try {
+            // Call the service method to generate the PDF
+            citizenService.writeInformationToPdf(citizenId);
+            return StandardResponse.<String>builder()
+                    .status(Status.SUCCESS)
+                    .message("Citizen information PDF generated successfully")
+                    .build();
+        } catch (FileNotFoundException | DocumentException e) {
+            e.printStackTrace(); // Handle the exception appropriately
+            return StandardResponse.<String>builder()
+                    .status(Status.ERROR)
+                    .message("Failed to generate PDF: " + e.getMessage())
+                    .build();
+        }
     }
-
 }

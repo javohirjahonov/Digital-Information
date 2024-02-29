@@ -16,6 +16,7 @@ import com.example.electronic_numbering.repository.RegionRepository;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
+import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -134,7 +135,6 @@ public class CitizenService {
     }
 
     public CitizenInformationForPdf writeInformationToPdf(UUID citizenId) throws DocumentException, FileNotFoundException {
-        Document document = new Document();
         CitizenEntity citizenEntity = citizenRepository.findById(citizenId)
                 .orElseThrow(() -> new DataNotFoundException("Citizen Not Found"));
         RegionEntity region = regionRepository.findById(citizenEntity.getRegion().getId())
@@ -143,27 +143,28 @@ public class CitizenService {
                 .orElseThrow(() -> new DataNotFoundException("District not found"));
         NeighborhoodEntity neighborhood = neighborhoodRepository.findById(citizenEntity.getCitizensNeighborhood().getId())
                 .orElseThrow(() -> new DataNotFoundException("Neighborhood not found "));
-        CitizenInformationForPdf citizenInformationForPdf = CitizenInformationForPdf.builder()
-                .fullName(citizenEntity.getFullName())
-                .region(region.getNameOz())
-                .citizenDistrict(district.getNameOz())
-                .citizensNeighborhood(neighborhood.getName_oz())
-                .homeCode(citizenEntity.getHomeCode())
-                .hasCadastre(citizenEntity.isHasCadastre())
-                .phoneNumber(citizenEntity.getPhoneNumber())
-                .theNumberOfHouseholdsInAForeignCountry(citizenEntity.getTheNumberOfHouseholdsInAForeignCountry())
-                .homeAddress(citizenEntity.getHomeAddress())
-                .homeNumber(citizenEntity.getHomeNumber())
-                .homeLocation(citizenEntity.getHomeLocation())
-                .build();
-        PdfWriter.getInstance(document, new FileOutputStream("Citizen Information"));
+
+        Document document = new Document();
+        String filePath = "Citizen_Information.pdf"; // Specify the file path
+        PdfWriter.getInstance(document, new FileOutputStream(filePath));
         document.open();
-        document.add((Element) citizenInformationForPdf);
+
+        // Add citizen information to the document as paragraphs
+        document.add(new Paragraph("Full Name: " + citizenEntity.getFullName()));
+        document.add(new Paragraph("Region: " + region.getNameOz()));
+        document.add(new Paragraph("District: " + district.getNameOz()));
+        document.add(new Paragraph("Neighborhood: " + neighborhood.getName_oz()));
+        document.add(new Paragraph("Home Code: " + citizenEntity.getHomeCode()));
+        document.add(new Paragraph("Has Cadastre: " + citizenEntity.isHasCadastre()));
+        document.add(new Paragraph("Phone Number: " + citizenEntity.getPhoneNumber()));
+        document.add(new Paragraph("Households in a Foreign Country: " + citizenEntity.getTheNumberOfHouseholdsInAForeignCountry()));
+        document.add(new Paragraph("Home Address: " + citizenEntity.getHomeAddress()));
+        document.add(new Paragraph("Home Number: " + citizenEntity.getHomeNumber()));
+        document.add(new Paragraph("Home Location: " + citizenEntity.getHomeLocation()));
+
         document.close();
-        return citizenInformationForPdf;
+        return new CitizenInformationForPdf(); // Return an empty object or any other necessary response
     }
-
-
 
 
 }
