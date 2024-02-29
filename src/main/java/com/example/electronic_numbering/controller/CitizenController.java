@@ -7,12 +7,14 @@ import com.example.electronic_numbering.domain.dto.response.Status;
 import com.example.electronic_numbering.domain.entity.citizen.CitizenEntity;
 import com.example.electronic_numbering.exception.RequestValidationException;
 import com.example.electronic_numbering.service.citizen.CitizenService;
+import com.itextpdf.text.DocumentException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.FileNotFoundException;
 import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
@@ -78,6 +80,18 @@ public class CitizenController {
         return StandardResponse.<CitizenEntity>builder()
                 .status(Status.SUCCESS)
                 .data(citizenInformation.getData())
+                .message("Citizen deleted")
+                .build();
+    }
+
+    @GetMapping("/get-citizen-pdf")
+    public StandardResponse<CitizenInformationForPdf> getCitizenInformationPdf(
+            @RequestParam UUID citizenId
+    ) throws DocumentException, FileNotFoundException {
+        CitizenInformationForPdf citizenInformationForPdf = citizenService.writeInformationToPdf(citizenId);
+        return StandardResponse.<CitizenInformationForPdf>builder()
+                .status(Status.SUCCESS)
+                .data(citizenInformationForPdf)
                 .message("Citizen deleted")
                 .build();
     }
