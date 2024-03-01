@@ -151,8 +151,8 @@ public class CitizenService {
 
         // Add citizen information to the document as paragraphs
         document.add(new Paragraph("Full Name: " + citizenEntity.getFullName()));
-        document.add(new Paragraph("Region: " + region.getNameOz()));
-        document.add(new Paragraph("District: " + district.getNameOz()));
+        document.add(new Paragraph("Region: " + region.getNameUz()));
+        document.add(new Paragraph("District: " + district.getNameUz()));
         document.add(new Paragraph("Neighborhood: " + neighborhood.getName_oz()));
         document.add(new Paragraph("Home Code: " + citizenEntity.getHomeCode()));
         document.add(new Paragraph("Has Cadastre: " + citizenEntity.isHasCadastre()));
