@@ -6,9 +6,9 @@ spring:
     name: USER-SERVICE
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://digital-ocean-do-user-15828594-0.c.db.ondigitalocean.com:25060/electronic_numbering_db
+    url: jdbc:postgresql://digitalinformation-do-user-15998592-0.c.db.ondigitalocean.com:25060/digital_information
     username: doadmin
-    password: AVNS_Q_jskLppi85DATWcutq
+    password: AVNS_oSQcO55BfSeVnP2u04N
     hikari:
       connection-timeout: 30000
       maximum-pool-size: 10
