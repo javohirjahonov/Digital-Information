@@ -140,7 +140,7 @@ public class CitizenController {
         return StandardResponse.<List<CitizenEntity>>builder()
                 .status(Status.SUCCESS)
                 .data(allCitizenInformation)
-                .message("Citizen deleted")
+                .message("All Citizen Information")
                 .build();
     }
 }
