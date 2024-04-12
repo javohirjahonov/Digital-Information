@@ -133,4 +133,14 @@ public class CitizenController {
             throw new RuntimeException(e);
         }
     }
+
+    @GetMapping("/get-all-citizen-information")
+    public StandardResponse<List<CitizenEntity>> getCitizenInformation() {
+        List<CitizenEntity> allCitizenInformation = citizenService.getAllCitizenInformation().getData();
+        return StandardResponse.<List<CitizenEntity>>builder()
+                .status(Status.SUCCESS)
+                .data(allCitizenInformation)
+                .message("Citizen deleted")
+                .build();
+    }
 }

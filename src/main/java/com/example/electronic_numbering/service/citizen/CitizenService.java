@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -111,6 +112,16 @@ public class CitizenService {
                 .status(Status.SUCCESS)
                 .message("Citizen information")
                 .data(citizen)
+                .build();
+
+    }
+
+    public StandardResponse<List<CitizenEntity>> getAllCitizenInformation() {
+        List<CitizenEntity> citizenEntities = citizenRepository.findAll();
+        return StandardResponse.<List<CitizenEntity>>builder()
+                .status(Status.SUCCESS)
+                .message("Citizen information")
+                .data(citizenEntities)
                 .build();
 
     }
