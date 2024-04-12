@@ -1,10 +1,12 @@
 package com.example.electronic_numbering.controller;
 
+import com.example.electronic_numbering.domain.dto.request.citizen.CitizenSearchRequest;
 import com.example.electronic_numbering.domain.dto.request.user.*;
 import com.example.electronic_numbering.domain.dto.response.JwtResponse;
 import com.example.electronic_numbering.domain.dto.response.StandardResponse;
 import com.example.electronic_numbering.domain.dto.response.Status;
 import com.example.electronic_numbering.domain.entity.citizen.CitizenEntity;
+import com.example.electronic_numbering.exception.DataNotFoundException;
 import com.example.electronic_numbering.exception.RequestValidationException;
 import com.example.electronic_numbering.service.citizen.CitizenService;
 import com.itextpdf.text.DocumentException;
@@ -142,5 +144,15 @@ public class CitizenController {
                 .data(allCitizenInformation)
                 .message("All Citizen Information")
                 .build();
+    }
+
+    @PostMapping("/search")
+    public ResponseEntity<StandardResponse<List<CitizenEntity>>> searchCitizens(@RequestBody CitizenSearchRequest searchRequest) {
+        try {
+            StandardResponse<List<CitizenEntity>> response = citizenService.searchCitizens(searchRequest);
+            return ResponseEntity.ok(response);
+        } catch (DataNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

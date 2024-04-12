@@ -1,5 +1,6 @@
 package com.example.electronic_numbering.service.citizen;
 
+import com.example.electronic_numbering.domain.dto.request.citizen.CitizenSearchRequest;
 import com.example.electronic_numbering.domain.dto.request.user.*;
 import com.example.electronic_numbering.domain.dto.response.StandardResponse;
 import com.example.electronic_numbering.domain.dto.response.Status;
@@ -18,13 +19,17 @@ import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfWriter;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -86,13 +91,10 @@ public class CitizenService {
             citizen.setHomeLocation(update.getHomeLocation());
         }
 
-        // Set the updated date
         citizen.setUpdatedDate(LocalDateTime.now());
 
-        // Save the updated citizen entity
         citizenRepository.save(citizen);
 
-        // Return the updated user details
         return StandardResponse.<CitizenDetailsForFront>builder()
                 .status(Status.SUCCESS)
                 .message("User updated successfully")
@@ -156,7 +158,7 @@ public class CitizenService {
                 .orElseThrow(() -> new DataNotFoundException("Neighborhood not found "));
 
         Document document = new Document();
-        String filePath = "Citizen_Information.pdf"; // Specify the file path
+        String filePath = "Citizen_Information.pdf";
         PdfWriter.getInstance(document, new FileOutputStream(filePath));
         document.open();
 
@@ -174,8 +176,63 @@ public class CitizenService {
         document.add(new Paragraph("Home Location: " + citizenEntity.getHomeLocation()));
 
         document.close();
-        return new CitizenInformationForPdf(); // Return an empty object or any other necessary response
+        return new CitizenInformationForPdf();
     }
 
+    public StandardResponse<List<CitizenEntity>> searchCitizens(CitizenSearchRequest searchRequest) {
+        Specification<CitizenEntity> specification = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
+            if (searchRequest.getFullName() != null) {
+                predicates.add(criteriaBuilder.like(root.get("fullName"), "%" + searchRequest.getFullName() + "%"));
+            }
+            if (searchRequest.getHomeAddress() != null) {
+                predicates.add(criteriaBuilder.like(root.get("region"), "%" + searchRequest.getRegion() + "%"));
+            }
+            if (searchRequest.getHomeCode() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("citizenDistrict"), "%" + searchRequest.getCitizenDistrict() + "%"));
+            }
+            if (searchRequest.getHomeCode() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("citizensNeighborhood"), "%" + searchRequest.getCitizensNeighborhood() + "%" ));
+            }
+            if (searchRequest.getHomeCode() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("homeAddress"),"%" + searchRequest.getHomeCode() + "%" ));
+            }
+            if (searchRequest.getHomeCode() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("homeCode"), searchRequest.getHomeCode()));
+            }
+            if (searchRequest.getHomeCode() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("homeNumber"), searchRequest.getHomeCode()));
+            }
+            if (searchRequest.getHomeCode() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("phoneNumber"), searchRequest.getHomeCode()));
+            }
+            if (searchRequest.getHomeCode() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("hasCadastre"), searchRequest.getHomeCode()));
+            }
+            if (searchRequest.getHomeCode() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("numberOfFamilyMembers"), "%" +searchRequest.getHomeCode() +"%" ));
+            }
+            if (searchRequest.getHomeCode() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("theNumberOfHouseholdsInAForeignCountry"), searchRequest.getHomeCode()));
+            }
+            if (searchRequest.getHomeCode() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("homeLocation"), "%" + searchRequest.getHomeCode() + "%" ));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        List<CitizenEntity> citizens = citizenRepository.findAll(specification);
+
+        if (citizens.isEmpty()) {
+            throw new DataNotFoundException("No citizens found with the provided search criteria");
+        }
+
+        return StandardResponse.<List<CitizenEntity>>builder()
+                .status(Status.SUCCESS)
+                .message("Citizens found with the provided search criteria")
+                .data(citizens)
+                .build();
+    }
 }
