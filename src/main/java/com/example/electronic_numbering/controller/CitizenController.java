@@ -16,9 +16,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.Resource;
+import org.springframework.http.*;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
@@ -96,43 +95,22 @@ public class CitizenController {
     }
 
     @GetMapping("/get-citizen-pdf")
-    public StandardResponse<String> getCitizenInformationPdf(
-            HttpServletResponse response,
-            @RequestParam UUID citizenId
-    ) {
+    public ResponseEntity<Resource> getCitizenInformationPdf(@RequestParam UUID citizenId) {
         try {
             // Call the service method to generate the PDF
-            CitizenInformationForPdf citizenInformation = citizenService.writeInformationToPdf(citizenId);
-
-            // Set response content type
-            response.setContentType("application/pdf");
+            Resource pdfResource = citizenService.writeInformationToPdf(citizenId);
 
             // Set headers for the response to indicate file download
-            response.setHeader("Content-Disposition", "attachment; filename=Citizen_Information.pdf");
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDisposition(ContentDisposition.builder("attachment").filename("Citizen_Information.pdf").build());
 
-            // Get the file input stream for the generated PDF
-            FileInputStream inputStream = new FileInputStream("Citizen_Information.pdf");
-
-            // Copy the PDF content to the response output stream
-            ServletOutputStream outputStream = response.getOutputStream();
-            IOUtils.copy(inputStream, outputStream);
-            outputStream.flush();
-
-            // Close streams
-            inputStream.close();
-            outputStream.close();
-            return StandardResponse.<String>builder()
-                    .status(Status.SUCCESS)
-                    .message("Citizen information PDF generated successfully")
-                    .build();
-        } catch (FileNotFoundException | DocumentException e) {
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(pdfResource);
+        } catch (DataNotFoundException | DocumentException | IOException e) {
             e.printStackTrace(); // Handle the exception appropriately
-            return StandardResponse.<String>builder()
-                    .status(Status.ERROR)
-                    .message("Failed to generate PDF: " + e.getMessage())
-                    .build();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 

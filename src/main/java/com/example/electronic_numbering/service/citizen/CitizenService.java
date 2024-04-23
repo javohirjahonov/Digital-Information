@@ -20,14 +20,20 @@ import com.itextpdf.text.Element;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfWriter;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -147,7 +153,7 @@ public class CitizenService {
                 .build();
     }
 
-    public CitizenInformationForPdf writeInformationToPdf(UUID citizenId) throws DocumentException, FileNotFoundException {
+    public Resource writeInformationToPdf(UUID citizenId) throws DocumentException, IOException {
         CitizenEntity citizenEntity = citizenRepository.findById(citizenId)
                 .orElseThrow(() -> new DataNotFoundException("Citizen Not Found"));
         RegionEntity region = regionRepository.findById(citizenEntity.getRegion().getId())
@@ -157,9 +163,10 @@ public class CitizenService {
         NeighborhoodEntity neighborhood = neighborhoodRepository.findById(citizenEntity.getCitizensNeighborhood().getId())
                 .orElseThrow(() -> new DataNotFoundException("Neighborhood not found "));
 
+        // Create PDF document
         Document document = new Document();
-        String filePath = "Citizen_Information.pdf";
-        PdfWriter.getInstance(document, new FileOutputStream(filePath));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PdfWriter.getInstance(document, outputStream);
         document.open();
 
         // Add citizen information to the document as paragraphs
@@ -175,8 +182,13 @@ public class CitizenService {
         document.add(new Paragraph("Home Number: " + citizenEntity.getHomeNumber()));
         document.add(new Paragraph("Home Location: " + citizenEntity.getHomeLocation()));
 
+        // Close document
         document.close();
-        return new CitizenInformationForPdf();
+
+        // Create ByteArrayResource from byte array
+        ByteArrayResource resource = new ByteArrayResource(outputStream.toByteArray());
+
+        return resource;
     }
 
     public StandardResponse<List<CitizenEntity>> searchCitizens(CitizenSearchRequest searchRequest) {
