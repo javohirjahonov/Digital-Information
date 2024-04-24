@@ -170,17 +170,17 @@ public class CitizenService {
         document.open();
 
         // Add citizen information to the document as paragraphs
-        document.add(new Paragraph("Full Name: " + citizenEntity.getFullName()));
-        document.add(new Paragraph("Region: " + region.getNameUz()));
-        document.add(new Paragraph("District: " + district.getNameUz()));
-        document.add(new Paragraph("Neighborhood: " + neighborhood.getName_oz()));
-        document.add(new Paragraph("Home Code: " + citizenEntity.getHomeCode()));
-        document.add(new Paragraph("Has Cadastre: " + citizenEntity.isHasCadastre()));
-        document.add(new Paragraph("Phone Number: " + citizenEntity.getPhoneNumber()));
-        document.add(new Paragraph("Households in a Foreign Country: " + citizenEntity.getTheNumberOfHouseholdsInAForeignCountry()));
-        document.add(new Paragraph("Home Address: " + citizenEntity.getHomeAddress()));
-        document.add(new Paragraph("Home Number: " + citizenEntity.getHomeNumber()));
-        document.add(new Paragraph("Home Location: " + citizenEntity.getHomeLocation()));
+        document.add(new Paragraph("Ism Familiya: " + citizenEntity.getFullName()));
+        document.add(new Paragraph("Viloyat: " + region.getNameUz()));
+        document.add(new Paragraph("Tuman: " + district.getNameUz()));
+        document.add(new Paragraph("Mahalla: " + neighborhood.getName_oz()));
+        document.add(new Paragraph("Honadon kodi: " + citizenEntity.getHomeCode()));
+        document.add(new Paragraph("Kadastr bormi : " + citizenEntity.isHasCadastre()));
+        document.add(new Paragraph("Telefon raqami: " + citizenEntity.getPhoneNumber()));
+        document.add(new Paragraph("Chet elda mavjud honadon a'zolari soni: " + citizenEntity.getTheNumberOfHouseholdsInAForeignCountry()));
+        document.add(new Paragraph("Honadon manzili: " + citizenEntity.getHomeAddress()));
+        document.add(new Paragraph("Honadon raqami: " + citizenEntity.getHomeNumber()));
+        document.add(new Paragraph("Honadon manzili: " + citizenEntity.getHomeLocation()));
 
         // Close document
         document.close();
