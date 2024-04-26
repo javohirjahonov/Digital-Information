@@ -42,7 +42,7 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // Adjust the mapping pattern as needed
-                .allowedOrigins("http://127.0.0.1:5173") // Adjust with the actual origin of your React app
+                .allowedOrigins("https://elektron-raqamlastirish.netlify.app") // Adjust with the actual origin of your React app
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
                 .allowedHeaders("*")
                 .allowCredentials(true);
