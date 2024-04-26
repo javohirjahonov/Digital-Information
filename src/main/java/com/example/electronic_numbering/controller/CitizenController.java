@@ -124,8 +124,10 @@ public class CitizenController {
                 .build();
     }
 
-    @PostMapping("/citizens/search")
-    public ResponseEntity<List<CitizenEntity>> searchCitizens(@RequestBody CitizenSearchRequest searchRequest) {
+    @PostMapping("/search")
+    public ResponseEntity<List<CitizenEntity>> searchCitizens(
+            @RequestBody CitizenSearchRequest searchRequest
+    ) {
         List<CitizenEntity> citizens = citizenService.searchCitizen(
                 searchRequest.getFullName(),
                 searchRequest.getRegion(),
