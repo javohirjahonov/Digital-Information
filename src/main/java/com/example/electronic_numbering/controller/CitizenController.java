@@ -124,13 +124,22 @@ public class CitizenController {
                 .build();
     }
 
-    @PostMapping("/search")
-    public ResponseEntity<StandardResponse<List<CitizenEntity>>> searchCitizens(@RequestBody CitizenSearchRequest searchRequest) {
-        try {
-            StandardResponse<List<CitizenEntity>> response = citizenService.searchCitizens(searchRequest);
-            return ResponseEntity.ok(response);
-        } catch (DataNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+    @PostMapping("/citizens/search")
+    public ResponseEntity<List<CitizenEntity>> searchCitizens(@RequestBody CitizenSearchRequest searchRequest) {
+        List<CitizenEntity> citizens = citizenService.searchCitizen(
+                searchRequest.getFullName(),
+                searchRequest.getRegion(),
+                searchRequest.getCitizenDistrict(),
+                searchRequest.getCitizensNeighborhood(),
+                searchRequest.getHomeAddress(),
+                searchRequest.getHomeCode(),
+                searchRequest.getHomeNumber(),
+                searchRequest.getPhoneNumber(),
+                searchRequest.isHasCadastre(),
+                searchRequest.getNumberOfFamilyMembers(),
+                searchRequest.getTheNumberOfHouseholdsInAForeignCountry(),
+                searchRequest.getHomeLocation()
+        );
+        return new ResponseEntity<>(citizens, HttpStatus.OK);
     }
 }

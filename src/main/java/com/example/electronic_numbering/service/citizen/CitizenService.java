@@ -1,6 +1,5 @@
 package com.example.electronic_numbering.service.citizen;
 
-import com.example.electronic_numbering.domain.dto.request.citizen.CitizenSearchRequest;
 import com.example.electronic_numbering.domain.dto.request.user.*;
 import com.example.electronic_numbering.domain.dto.response.StandardResponse;
 import com.example.electronic_numbering.domain.dto.response.Status;
@@ -16,23 +15,20 @@ import com.example.electronic_numbering.repository.NeighborhoodRepository;
 import com.example.electronic_numbering.repository.RegionRepository;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Element;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfWriter;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -47,6 +43,7 @@ public class CitizenService {
     private final DistrictRepository districtRepository;
     private final NeighborhoodRepository neighborhoodRepository;
     private final ModelMapper modelMapper;
+    private final EntityManager entityManager;
     public StandardResponse<CitizenEntity> addCitizen(CitizenCreateDto citizenCreateDto) {
         CitizenEntity citizenEntity = modelMapper.map(citizenCreateDto, CitizenEntity.class);
         CitizenEntity citizen = citizenRepository.save(citizenEntity);
@@ -191,60 +188,52 @@ public class CitizenService {
         return resource;
     }
 
-    public StandardResponse<List<CitizenEntity>> searchCitizens(CitizenSearchRequest searchRequest) {
-        Specification<CitizenEntity> specification = (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
+    public List<CitizenEntity> searchCitizen(String fullName, RegionEntity region, DistrictEntity district, NeighborhoodEntity neighborhood, String homeAddress, String homeCode, String homeNumber, String phoneNumber, boolean hasCadastre, String numberOfFamilyMembers, String numberOfHouseholdsInForeignCountry, String homeLocation) {
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<CitizenEntity> criteriaQuery = criteriaBuilder.createQuery(CitizenEntity.class);
+        Root<CitizenEntity> root = criteriaQuery.from(CitizenEntity.class);
 
-            if (searchRequest.getFullName() != null) {
-                predicates.add(criteriaBuilder.like(root.get("fullName"), "%" + searchRequest.getFullName() + "%"));
-            }
-            if (searchRequest.getHomeAddress() != null) {
-                predicates.add(criteriaBuilder.like(root.get("region"), "%" + searchRequest.getRegion() + "%"));
-            }
-            if (searchRequest.getHomeCode() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("citizenDistrict"), "%" + searchRequest.getCitizenDistrict() + "%"));
-            }
-            if (searchRequest.getHomeCode() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("citizensNeighborhood"), "%" + searchRequest.getCitizensNeighborhood() + "%" ));
-            }
-            if (searchRequest.getHomeCode() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("homeAddress"),"%" + searchRequest.getHomeCode() + "%" ));
-            }
-            if (searchRequest.getHomeCode() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("homeCode"), searchRequest.getHomeCode()));
-            }
-            if (searchRequest.getHomeCode() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("homeNumber"), searchRequest.getHomeCode()));
-            }
-            if (searchRequest.getHomeCode() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("phoneNumber"), searchRequest.getHomeCode()));
-            }
-            if (searchRequest.getHomeCode() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("hasCadastre"), searchRequest.getHomeCode()));
-            }
-            if (searchRequest.getHomeCode() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("numberOfFamilyMembers"), "%" +searchRequest.getHomeCode() +"%" ));
-            }
-            if (searchRequest.getHomeCode() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("theNumberOfHouseholdsInAForeignCountry"), searchRequest.getHomeCode()));
-            }
-            if (searchRequest.getHomeCode() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("homeLocation"), "%" + searchRequest.getHomeCode() + "%" ));
-            }
+        List<Predicate> predicates = new ArrayList<>();
 
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-        };
-
-        List<CitizenEntity> citizens = citizenRepository.findAll(specification);
-
-        if (citizens.isEmpty()) {
-            throw new DataNotFoundException("No citizens found with the provided search criteria");
+        if (fullName != null && !fullName.isEmpty()) {
+            predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("fullName")), "%" + fullName.toLowerCase() + "%"));
+        }
+        if (region != null) {
+            predicates.add(criteriaBuilder.equal(root.get("region"), region));
+        }
+        if (district != null) {
+            predicates.add(criteriaBuilder.equal(root.get("citizenDistrict"), district));
+        }
+        if (neighborhood != null) {
+            predicates.add(criteriaBuilder.equal(root.get("citizensNeighborhood"), neighborhood));
+        }
+        if (homeAddress != null && !homeAddress.isEmpty()) {
+            predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("homeAddress")), "%" + homeAddress.toLowerCase() + "%"));
+        }
+        if (homeCode != null && !homeCode.isEmpty()) {
+            predicates.add(criteriaBuilder.equal(root.get("homeCode"), homeCode));
+        }
+        if (homeNumber != null && !homeNumber.isEmpty()) {
+            predicates.add(criteriaBuilder.equal(root.get("homeNumber"), homeNumber));
+        }
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            predicates.add(criteriaBuilder.equal(root.get("phoneNumber"), phoneNumber));
+        }
+        if (hasCadastre) {
+            predicates.add(criteriaBuilder.isTrue(root.get("hasCadastre")));
+        }
+        if (numberOfFamilyMembers != null && !numberOfFamilyMembers.isEmpty()) {
+            predicates.add(criteriaBuilder.equal(root.get("numberOfFamilyMembers"), numberOfFamilyMembers));
+        }
+        if (numberOfHouseholdsInForeignCountry != null && !numberOfHouseholdsInForeignCountry.isEmpty()) {
+            predicates.add(criteriaBuilder.equal(root.get("theNumberOfHouseholdsInAForeignCountry"), numberOfHouseholdsInForeignCountry));
+        }
+        if (homeLocation != null && !homeLocation.isEmpty()) {
+            predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("homeLocation")), "%" + homeLocation.toLowerCase() + "%"));
         }
 
-        return StandardResponse.<List<CitizenEntity>>builder()
-                .status(Status.SUCCESS)
-                .message("Citizens found with the provided search criteria")
-                .data(citizens)
-                .build();
+        criteriaQuery.where(predicates.toArray(new Predicate[0]));
+
+        return entityManager.createQuery(criteriaQuery).getResultList();
     }
 }
