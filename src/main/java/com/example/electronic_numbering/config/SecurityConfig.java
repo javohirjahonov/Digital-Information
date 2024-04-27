@@ -48,7 +48,7 @@ public class SecurityConfig implements WebMvcConfigurer {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("https://elektron-raqamlastirish.netlify.app"); // Adjust with your Netlify frontend URL
+        config.addAllowedOrigin("*"); // Adjust with your Netlify frontend URL
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);
