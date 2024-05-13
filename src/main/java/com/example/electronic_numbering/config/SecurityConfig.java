@@ -31,15 +31,15 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .cors(Customizer.withDefaults())
+                .cors(Customizer.withDefaults()) // Enable CORS with defaults
                 .csrf().disable()
-                .authorizeHttpRequests((authorize) -> {
+                .authorizeHttpRequests(authorize -> {
                     authorize
                             .requestMatchers(permitAll).permitAll()
-                            .requestMatchers(HttpMethod.OPTIONS).permitAll()
+                            .requestMatchers(HttpMethod.OPTIONS).permitAll() // Allow OPTIONS preflight
                             .anyRequest().authenticated();
                 })
-                .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(new JwtFilterToken(authenticationService, jwtService), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
@@ -73,19 +73,30 @@ public class SecurityConfig implements WebMvcConfigurer {
 //        };
 //    }
 
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOrigins("https://elektron-raqamlastirish.netlify.app")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE")
-                        .allowedHeaders("*")
-                        .exposedHeaders(HttpHeaders.AUTHORIZATION)
-                        .allowCredentials(true);
-            }
-        };
+//    @Bean
+//    public WebMvcConfigurer corsConfigurer() {
+//        return new WebMvcConfigurer() {
+//            @Override
+//            public void addCorsMappings(CorsRegistry registry) {
+//                registry.addMapping("/**")
+//                        .allowedOrigins("https://elektron-raqamlastirish.netlify.app")
+//                        .allowedMethods("GET", "POST", "PUT", "DELETE")
+//                        .allowedHeaders("*")
+//                        .exposedHeaders(HttpHeaders.AUTHORIZATION)
+//                        .allowCredentials(true);
+//            }
+//        };
+//    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("https://elektron-raqamlastirish.netlify.app")
+                .allowedMethods("*")
+                .allowedHeaders("*")
+                .exposedHeaders(HttpHeaders.AUTHORIZATION)
+                .allowCredentials(true)
+                .maxAge(3600);
     }
 
 }
