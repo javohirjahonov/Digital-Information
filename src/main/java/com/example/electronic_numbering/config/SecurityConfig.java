@@ -31,7 +31,7 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .cors(Customizer.withDefaults()) // Enable CORS with defaults
+                .cors().disable()
                 .csrf().disable()
                 .authorizeHttpRequests(authorize -> {
                     authorize
@@ -88,15 +88,15 @@ public class SecurityConfig implements WebMvcConfigurer {
 //        };
 //    }
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins("https://elektron-raqamlastirish.netlify.app")
-                .allowedMethods("*")
-                .allowedHeaders("*")
-                .exposedHeaders(HttpHeaders.AUTHORIZATION)
-                .allowCredentials(true)
-                .maxAge(3600);
-    }
+    // @Override
+    // public void addCorsMappings(CorsRegistry registry) {
+    //     registry.addMapping("/**")
+    //             .allowedOrigins("https://elektron-raqamlastirish.netlify.app")
+    //             .allowedMethods("*")
+    //             .allowedHeaders("*")
+    //             .exposedHeaders(HttpHeaders.AUTHORIZATION)
+    //             .allowCredentials(true)
+    //             .maxAge(3600);
+    // }
 
 }
