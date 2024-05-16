@@ -27,13 +27,13 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .cors(cors -> cors.disable()) // Disable CORS
+                .cors(cors -> cors.disable()) // Disable CORS completely
                 .csrf().disable()
                 .authorizeHttpRequests(authorize -> {
                     authorize
-                            .requestMatchers(permitAll).permitAll()
-                            .requestMatchers(HttpMethod.OPTIONS).permitAll()
-                            .anyRequest().authenticated();
+                            .requestMatchers(permitAll).permitAll() // Allow predefined paths
+                            .requestMatchers(HttpMethod.OPTIONS).permitAll() // Allow OPTIONS preflight
+                            .anyRequest().authenticated(); // Require authentication for all other requests
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(new JwtFilterToken(authenticationService, jwtService), UsernamePasswordAuthenticationFilter.class)
@@ -42,10 +42,13 @@ public class SecurityConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        // Implement CORS policy as needed
         registry.addMapping("/**")
-                .allowedOrigins("*") // Allow all origins
-                .allowedMethods("*") // Allow all methods
-                .allowedHeaders("*") // Allow all headers
-                .allowCredentials(true); // Allow credentials
+                .allowedOriginPatterns("*") // Adjust the pattern to match your domain(s)
+                .allowedMethods("GET", "POST", "PUT", "DELETE")
+                .allowedHeaders("*")
+                .exposedHeaders(HttpHeaders.AUTHORIZATION)
+                .allowCredentials(true)
+                .maxAge(3600);
     }
 }
