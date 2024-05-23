@@ -3,9 +3,13 @@ package com.example.electronic_numbering.domain.dto.request.user;
 import com.example.electronic_numbering.domain.entity.region.DistrictEntity;
 import com.example.electronic_numbering.domain.entity.region.NeighborhoodEntity;
 import com.example.electronic_numbering.domain.entity.region.RegionEntity;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+@Builder
 public class CitizenSearchRequest {
     private String fullName;
     private RegionEntity region;

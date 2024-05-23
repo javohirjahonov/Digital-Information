@@ -1,6 +1,5 @@
 package com.example.electronic_numbering.controller;
 
-import com.example.electronic_numbering.domain.dto.request.citizen.CitizenSearchRequest;
 import com.example.electronic_numbering.domain.dto.request.user.*;
 import com.example.electronic_numbering.domain.dto.response.JwtResponse;
 import com.example.electronic_numbering.domain.dto.response.StandardResponse;
@@ -125,23 +124,7 @@ public class CitizenController {
     }
 
     @PostMapping("/search")
-    public ResponseEntity<List<CitizenEntity>> searchCitizens(
-            @RequestBody CitizenSearchRequest searchRequest
-    ) {
-        List<CitizenEntity> citizens = citizenService.searchCitizen(
-                searchRequest.getFullName(),
-                searchRequest.getRegion(),
-                searchRequest.getCitizenDistrict(),
-                searchRequest.getCitizensNeighborhood(),
-                searchRequest.getHomeAddress(),
-                searchRequest.getHomeCode(),
-                searchRequest.getHomeNumber(),
-                searchRequest.getPhoneNumber(),
-                searchRequest.isHasCadastre(),
-                searchRequest.getNumberOfFamilyMembers(),
-                searchRequest.getTheNumberOfHouseholdsInAForeignCountry(),
-                searchRequest.getHomeLocation()
-        );
-        return new ResponseEntity<>(citizens, HttpStatus.OK);
+    public ResponseEntity<List<CitizenEntity>> searchCitizens(@RequestBody CitizenSearchRequest searchRequest) {
+        return ResponseEntity.ok(citizenService.searchCitizen(searchRequest));
     }
 }
