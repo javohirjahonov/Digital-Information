@@ -188,52 +188,53 @@ public class CitizenService {
         return resource;
     }
 
-    public List<CitizenEntity> searchCitizen(String fullName, RegionEntity region, DistrictEntity district, NeighborhoodEntity neighborhood, String homeAddress, String homeCode, String homeNumber, String phoneNumber, boolean hasCadastre, String numberOfFamilyMembers, String numberOfHouseholdsInForeignCountry, String homeLocation) {
+    public List<CitizenEntity> searchCitizen(CitizenSearchRequest searchRequest) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<CitizenEntity> criteriaQuery = criteriaBuilder.createQuery(CitizenEntity.class);
         Root<CitizenEntity> root = criteriaQuery.from(CitizenEntity.class);
 
         List<Predicate> predicates = new ArrayList<>();
 
-        if (fullName != null && !fullName.isEmpty()) {
-            predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("fullName")), "%" + fullName.toLowerCase() + "%"));
+        if (searchRequest.getFullName() != null && !searchRequest.getFullName().isEmpty()) {
+            predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("fullName")), "%" + searchRequest.getFullName().toLowerCase() + "%"));
         }
-        if (region != null) {
-            predicates.add(criteriaBuilder.equal(root.get("region"), region));
+        if (searchRequest.getRegion() != null) {
+            predicates.add(criteriaBuilder.equal(root.get("region"), searchRequest.getRegion()));
         }
-        if (district != null) {
-            predicates.add(criteriaBuilder.equal(root.get("citizenDistrict"), district));
+        if (searchRequest.getDistrict() != null) {
+            predicates.add(criteriaBuilder.equal(root.get("citizenDistrict"), searchRequest.getDistrict()));
         }
-        if (neighborhood != null) {
-            predicates.add(criteriaBuilder.equal(root.get("citizensNeighborhood"), neighborhood));
+        if (searchRequest.getNeighborhood() != null) {
+            predicates.add(criteriaBuilder.equal(root.get("citizensNeighborhood"), searchRequest.getNeighborhood()));
         }
-        if (homeAddress != null && !homeAddress.isEmpty()) {
-            predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("homeAddress")), "%" + homeAddress.toLowerCase() + "%"));
+        if (searchRequest.getHomeAddress() != null && !searchRequest.getHomeAddress().isEmpty()) {
+            predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("homeAddress")), "%" + searchRequest.getHomeAddress().toLowerCase() + "%"));
         }
-        if (homeCode != null && !homeCode.isEmpty()) {
-            predicates.add(criteriaBuilder.equal(root.get("homeCode"), homeCode));
+        if (searchRequest.getHomeCode() != null && !searchRequest.getHomeCode().isEmpty()) {
+            predicates.add(criteriaBuilder.equal(root.get("homeCode"), searchRequest.getHomeCode()));
         }
-        if (homeNumber != null && !homeNumber.isEmpty()) {
-            predicates.add(criteriaBuilder.equal(root.get("homeNumber"), homeNumber));
+        if (searchRequest.getHomeNumber() != null && !searchRequest.getHomeNumber().isEmpty()) {
+            predicates.add(criteriaBuilder.equal(root.get("homeNumber"), searchRequest.getHomeNumber()));
         }
-        if (phoneNumber != null && !phoneNumber.isEmpty()) {
-            predicates.add(criteriaBuilder.equal(root.get("phoneNumber"), phoneNumber));
+        if (searchRequest.getPhoneNumber() != null && !searchRequest.getPhoneNumber().isEmpty()) {
+            predicates.add(criteriaBuilder.equal(root.get("phoneNumber"), searchRequest.getPhoneNumber()));
         }
-        if (hasCadastre) {
+        if (searchRequest.isHasCadastre()) {
             predicates.add(criteriaBuilder.isTrue(root.get("hasCadastre")));
         }
-        if (numberOfFamilyMembers != null && !numberOfFamilyMembers.isEmpty()) {
-            predicates.add(criteriaBuilder.equal(root.get("numberOfFamilyMembers"), numberOfFamilyMembers));
+        if (searchRequest.getNumberOfFamilyMembers() != null && !searchRequest.getNumberOfFamilyMembers().isEmpty()) {
+            predicates.add(criteriaBuilder.equal(root.get("numberOfFamilyMembers"), searchRequest.getNumberOfFamilyMembers()));
         }
-        if (numberOfHouseholdsInForeignCountry != null && !numberOfHouseholdsInForeignCountry.isEmpty()) {
-            predicates.add(criteriaBuilder.equal(root.get("theNumberOfHouseholdsInAForeignCountry"), numberOfHouseholdsInForeignCountry));
+        if (searchRequest.getNumberOfHouseholdsInForeignCountry() != null && !searchRequest.getNumberOfHouseholdsInForeignCountry().isEmpty()) {
+            predicates.add(criteriaBuilder.equal(root.get("theNumberOfHouseholdsInAForeignCountry"), searchRequest.getNumberOfHouseholdsInForeignCountry()));
         }
-        if (homeLocation != null && !homeLocation.isEmpty()) {
-            predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("homeLocation")), "%" + homeLocation.toLowerCase() + "%"));
+        if (searchRequest.getHomeLocation() != null && !searchRequest.getHomeLocation().isEmpty()) {
+            predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("homeLocation")), "%" + searchRequest.getHomeLocation().toLowerCase() + "%"));
         }
 
         criteriaQuery.where(predicates.toArray(new Predicate[0]));
 
         return entityManager.createQuery(criteriaQuery).getResultList();
     }
+
 }
