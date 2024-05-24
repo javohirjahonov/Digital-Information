@@ -12,9 +12,9 @@ import lombok.*;
 @Builder
 public class CitizenSearchRequest {
     private String fullName;
-    private RegionEntity region;
-    private DistrictEntity district;
-    private NeighborhoodEntity neighborhood;
+    private String region;
+    private String district;
+    private String neighborhood;
     private String homeAddress;
     private String homeCode;
     private String homeNumber;

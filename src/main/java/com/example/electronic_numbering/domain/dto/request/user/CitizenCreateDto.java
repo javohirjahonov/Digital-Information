@@ -12,9 +12,9 @@ import lombok.*;
 @Builder
 public class CitizenCreateDto {
     private String fullName;
-    private RegionEntity region;
-    private DistrictEntity citizenDistrict;
-    private NeighborhoodEntity citizensNeighborhood;
+    private String region;
+    private String citizenDistrict;
+    private String citizensNeighborhood;
     private String homeAddress;
     private String homeCode;
     private String homeNumber;

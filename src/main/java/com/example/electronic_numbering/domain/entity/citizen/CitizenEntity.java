@@ -18,12 +18,12 @@ import lombok.*;
 public class CitizenEntity extends BaseEntity {
     @Column(nullable = false)
     private String fullName;
-    @OneToOne
-    private RegionEntity region;
-    @OneToOne
-    private DistrictEntity citizenDistrict;
-    @OneToOne
-    private NeighborhoodEntity citizensNeighborhood;
+    @Column(nullable = false)
+    private String region;
+    @Column(nullable = false)
+    private String citizenDistrict;
+    @Column(nullable = false)
+    private String citizensNeighborhood;
     @Column(nullable = false)
     private String homeAddress;
     @Column(nullable = false)

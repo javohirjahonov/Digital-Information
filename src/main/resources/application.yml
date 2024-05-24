@@ -6,14 +6,12 @@ spring:
     name: USER-SERVICE
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://psqldb-do-user-16227599-0.c.db.ondigitalocean.com:25060/digitaldata
-    username: postgres
-    password: 123
+    url: jdbc:postgresql://dpg-cp7onao21fec73dmolo0-a.oregon-postgres.render.com:5432/digital_data
+    username: digital_data_h2i3_user
+    password: 0omBPPiM0oM9a7dIqE3Wn4K2qmp7wOob
     hikari:
       connection-timeout: 30000
       maximum-pool-size: 10
-      minimum-idle: 2
-      idle-timeout: 600000
   jpa:
     hibernate:
       ddl-auto: update
@@ -39,6 +37,6 @@ jwt:
   secret:
     key: 753778214125442A472D4B6150645367566B59703373367639792F423F452848567890iuyiu67567886578uyutuio7865467897654678965467uior678545
   access:
-    expiry: 60000
+    expiry: 86400000
   refresh:
     expiry: 604800000

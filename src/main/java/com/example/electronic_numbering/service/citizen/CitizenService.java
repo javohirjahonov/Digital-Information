@@ -153,12 +153,12 @@ public class CitizenService {
     public Resource writeInformationToPdf(UUID citizenId) throws DocumentException, IOException {
         CitizenEntity citizenEntity = citizenRepository.findById(citizenId)
                 .orElseThrow(() -> new DataNotFoundException("Citizen Not Found"));
-        RegionEntity region = regionRepository.findById(citizenEntity.getRegion().getId())
-                .orElseThrow(() -> new DataNotFoundException("Region not found"));
-        DistrictEntity district = districtRepository.findById(citizenEntity.getCitizenDistrict().getId())
-                .orElseThrow(() -> new DataNotFoundException("District not found"));
-        NeighborhoodEntity neighborhood = neighborhoodRepository.findById(citizenEntity.getCitizensNeighborhood().getId())
-                .orElseThrow(() -> new DataNotFoundException("Neighborhood not found "));
+//        String region = regionRepository.findById(citizenEntity.getRegion())
+//                .orElseThrow(() -> new DataNotFoundException("Region not found"));
+//        DistrictEntity district = districtRepository.findById(citizenEntity.getCitizenDistrict().getId())
+//                .orElseThrow(() -> new DataNotFoundException("District not found"));
+//        NeighborhoodEntity neighborhood = neighborhoodRepository.findById(citizenEntity.getCitizensNeighborhood().getId())
+//                .orElseThrow(() -> new DataNotFoundException("Neighborhood not found "));
 
         // Create PDF document
         Document document = new Document();
@@ -168,9 +168,9 @@ public class CitizenService {
 
         // Add citizen information to the document as paragraphs
         document.add(new Paragraph("Ism Familiya: " + citizenEntity.getFullName()));
-        document.add(new Paragraph("Viloyat: " + region.getNameUz()));
-        document.add(new Paragraph("Tuman: " + district.getNameUz()));
-        document.add(new Paragraph("Mahalla: " + neighborhood.getName_oz()));
+        document.add(new Paragraph("Viloyat: " + citizenEntity.getRegion()));
+        document.add(new Paragraph("Tuman: " + citizenEntity.getCitizenDistrict()));
+        document.add(new Paragraph("Mahalla: " + citizenEntity.getCitizensNeighborhood()));
         document.add(new Paragraph("Honadon kodi: " + citizenEntity.getHomeCode()));
         document.add(new Paragraph("Kadastr bormi : " + citizenEntity.isHasCadastre()));
         document.add(new Paragraph("Telefon raqami: " + citizenEntity.getPhoneNumber()));

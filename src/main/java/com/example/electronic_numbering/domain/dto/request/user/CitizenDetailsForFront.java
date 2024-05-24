@@ -12,9 +12,9 @@ import lombok.*;
 @Builder
 public class CitizenDetailsForFront {
     private String fullName;
-    private RegionEntity region;
-    private DistrictEntity citizenDistrict;
-    private NeighborhoodEntity citizensNeighborhood;
+    private String region;
+    private String citizenDistrict;
+    private String citizensNeighborhood;
     private String homeCode;
     private boolean hasCadastre;
     private String phoneNumber;
