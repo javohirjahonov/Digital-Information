@@ -1,9 +1,27 @@
 server:
   port: 8082
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+  tomcat:
+    threads:
+      min-spare: 20
+      max: 200
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
 
 spring:
   application:
     name: USER-SERVICE
+  cache:
+    type: simple
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://dpg-cp7onao21fec73dmolo0-a.oregon-postgres.render.com:5432/digital_data
@@ -11,7 +29,10 @@ spring:
     password: 0omBPPiM0oM9a7dIqE3Wn4K2qmp7wOob
     hikari:
       connection-timeout: 30000
-      maximum-pool-size: 10
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 600000
+      max-lifetime: 1800000
   jpa:
     hibernate:
       ddl-auto: update
@@ -40,3 +61,4 @@ jwt:
     expiry: 86400000
   refresh:
     expiry: 604800000
+

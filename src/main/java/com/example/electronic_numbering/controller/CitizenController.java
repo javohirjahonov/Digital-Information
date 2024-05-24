@@ -74,7 +74,7 @@ public class CitizenController {
     public StandardResponse<String> deleteCitizen(
             @RequestParam UUID citizenId
     ) {
-        citizenService.deletedCitizen(citizenId);
+        citizenService.deleteCitizen(citizenId);
         return StandardResponse.<String>builder()
                 .status(Status.SUCCESS)
                 .message("Citizen deleted")

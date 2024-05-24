@@ -4,19 +4,9 @@ import com.example.electronic_numbering.domain.dto.request.user.*;
 import com.example.electronic_numbering.domain.dto.response.StandardResponse;
 import com.example.electronic_numbering.domain.dto.response.Status;
 import com.example.electronic_numbering.domain.entity.citizen.CitizenEntity;
-import com.example.electronic_numbering.domain.entity.region.DistrictEntity;
-import com.example.electronic_numbering.domain.entity.region.NeighborhoodEntity;
-import com.example.electronic_numbering.domain.entity.region.RegionEntity;
 import com.example.electronic_numbering.exception.DataNotFoundException;
 import com.example.electronic_numbering.exception.UserBadRequestException;
 import com.example.electronic_numbering.repository.CitizenRepository;
-import com.example.electronic_numbering.repository.DistrictRepository;
-import com.example.electronic_numbering.repository.NeighborhoodRepository;
-import com.example.electronic_numbering.repository.RegionRepository;
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Paragraph;
-import com.itextpdf.text.pdf.PdfWriter;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -26,7 +16,13 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfWriter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -39,88 +35,54 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CitizenService {
     private final CitizenRepository citizenRepository;
-    private final RegionRepository regionRepository;
-    private final DistrictRepository districtRepository;
-    private final NeighborhoodRepository neighborhoodRepository;
     private final ModelMapper modelMapper;
     private final EntityManager entityManager;
+
+    @Transactional
     public StandardResponse<CitizenEntity> addCitizen(CitizenCreateDto citizenCreateDto) {
         CitizenEntity citizenEntity = modelMapper.map(citizenCreateDto, CitizenEntity.class);
         CitizenEntity citizen = citizenRepository.save(citizenEntity);
-        return StandardResponse.<CitizenEntity> builder()
+        return StandardResponse.<CitizenEntity>builder()
                 .status(Status.SUCCESS)
                 .message("Citizen successfully added")
-                .data(citizen
-                ).build();
+                .data(citizen)
+                .build();
     }
 
-
+    @Transactional
     public StandardResponse<CitizenDetailsForFront> updateCitizenInformation(CitizenUpdateRequest update, UUID homeId) {
         CitizenEntity citizen = citizenRepository.findById(homeId)
-                .orElseThrow(() -> new UserBadRequestException("User not found"));
+                .orElseThrow(() -> new UserBadRequestException("Citizen not found"));
 
         // Update only the fields provided in the update request
-        if (update.getFullName() != null) {
-            citizen.setFullName(update.getFullName());
-        }
-        if (update.getRegion() != null) {
-            citizen.setRegion(update.getRegion());
-        }
-        if (update.getCitizenDistrict() != null) {
-            citizen.setCitizenDistrict(update.getCitizenDistrict());
-        }
-        if (update.getCitizensNeighborhood() != null) {
-            citizen.setCitizensNeighborhood(update.getCitizensNeighborhood());
-        }
-        if (update.getHomeCode() != null) {
-            citizen.setHomeCode(update.getHomeCode());
-        }
-        if (update.isHasCadastre()) { // Assuming 'isHasCadastre' is a boolean field
-            citizen.setHasCadastre(true);
-        }
-        if (update.getPhoneNumber() != null) {
-            citizen.setPhoneNumber(update.getPhoneNumber());
-        }
-        if (update.getTheNumberOfHouseholdsInAForeignCountry() != null) {
-            citizen.setTheNumberOfHouseholdsInAForeignCountry(update.getTheNumberOfHouseholdsInAForeignCountry());
-        }
-        if (update.getHomeAddress() != null) {
-            citizen.setHomeAddress(update.getHomeAddress());
-        }
-        if (update.getHomeNumber() != null) {
-            citizen.setHomeNumber(update.getHomeNumber());
-        }
-        if (update.getHomeLocation() != null) {
-            citizen.setHomeLocation(update.getHomeLocation());
-        }
+        modelMapper.map(update, citizen);
 
         citizen.setUpdatedDate(LocalDateTime.now());
-
         citizenRepository.save(citizen);
 
         return StandardResponse.<CitizenDetailsForFront>builder()
                 .status(Status.SUCCESS)
-                .message("User updated successfully")
+                .message("Citizen updated successfully")
                 .data(mappingCitizen(citizen))
                 .build();
     }
 
-    public CitizenDetailsForFront mappingCitizen(CitizenEntity citizenEntity){
-        // Mapping logic goes here
+    private CitizenDetailsForFront mappingCitizen(CitizenEntity citizenEntity) {
         return modelMapper.map(citizenEntity, CitizenDetailsForFront.class);
     }
 
+    @Transactional(readOnly = true)
     public StandardResponse<CitizenEntity> getCitizenInformation(UUID citizenId) {
-        CitizenEntity citizen = citizenRepository.findById(citizenId).orElseThrow(() ->
-                new DataNotFoundException("Citizen not found"));
+        CitizenEntity citizen = citizenRepository.findById(citizenId)
+                .orElseThrow(() -> new DataNotFoundException("Citizen not found"));
         return StandardResponse.<CitizenEntity>builder()
                 .status(Status.SUCCESS)
                 .message("Citizen information")
                 .data(citizen)
                 .build();
-
     }
 
+    @Transactional(readOnly = true)
     public StandardResponse<List<CitizenEntity>> getAllCitizenInformation() {
         List<CitizenEntity> citizenEntities = citizenRepository.findAll();
         return StandardResponse.<List<CitizenEntity>>builder()
@@ -128,39 +90,27 @@ public class CitizenService {
                 .message("Citizen information")
                 .data(citizenEntities)
                 .build();
-
     }
 
+    @Transactional
     public void cancelCitizen(UUID citizenId) {
-        CitizenEntity citizen = citizenRepository.findById(citizenId).orElseThrow(() -> new DataNotFoundException("Citizen not found"));
+        CitizenEntity citizen = citizenRepository.findById(citizenId)
+                .orElseThrow(() -> new DataNotFoundException("Citizen not found"));
         citizen.setUpdatedDate(LocalDateTime.now());
         citizenRepository.save(citizen);
-        StandardResponse.<String>builder()
-                .status(Status.SUCCESS)
-                .message("Successfully canceled")
-                .build();
     }
 
-    public void deletedCitizen(UUID citizenId) {
-        CitizenEntity citizen = citizenRepository.findById(citizenId).orElseThrow(() -> new DataNotFoundException("Citizen not found"));
+    @Transactional
+    public void deleteCitizen(UUID citizenId) {
+        CitizenEntity citizen = citizenRepository.findById(citizenId)
+                .orElseThrow(() -> new DataNotFoundException("Citizen not found"));
         citizenRepository.delete(citizen);
-        StandardResponse.<String>builder()
-                .status(Status.SUCCESS)
-                .message("Successfully deleted")
-                .build();
     }
 
     public Resource writeInformationToPdf(UUID citizenId) throws DocumentException, IOException {
         CitizenEntity citizenEntity = citizenRepository.findById(citizenId)
-                .orElseThrow(() -> new DataNotFoundException("Citizen Not Found"));
-//        String region = regionRepository.findById(citizenEntity.getRegion())
-//                .orElseThrow(() -> new DataNotFoundException("Region not found"));
-//        DistrictEntity district = districtRepository.findById(citizenEntity.getCitizenDistrict().getId())
-//                .orElseThrow(() -> new DataNotFoundException("District not found"));
-//        NeighborhoodEntity neighborhood = neighborhoodRepository.findById(citizenEntity.getCitizensNeighborhood().getId())
-//                .orElseThrow(() -> new DataNotFoundException("Neighborhood not found "));
+                .orElseThrow(() -> new DataNotFoundException("Citizen not found"));
 
-        // Create PDF document
         Document document = new Document();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PdfWriter.getInstance(document, outputStream);
@@ -179,15 +129,12 @@ public class CitizenService {
         document.add(new Paragraph("Honadon raqami: " + citizenEntity.getHomeNumber()));
         document.add(new Paragraph("Honadon manzili: " + citizenEntity.getHomeLocation()));
 
-        // Close document
         document.close();
 
-        // Create ByteArrayResource from byte array
-        ByteArrayResource resource = new ByteArrayResource(outputStream.toByteArray());
-
-        return resource;
+        return new ByteArrayResource(outputStream.toByteArray());
     }
 
+    @Transactional(readOnly = true)
     public List<CitizenEntity> searchCitizen(CitizenSearchRequest searchRequest) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<CitizenEntity> criteriaQuery = criteriaBuilder.createQuery(CitizenEntity.class);
@@ -237,4 +184,8 @@ public class CitizenService {
         return entityManager.createQuery(criteriaQuery).getResultList();
     }
 
+    @Async
+    public void sendVerificationCodeAsync(CitizenEntity citizenEntity) {
+        // Implement asynchronous email sending logic here
+    }
 }

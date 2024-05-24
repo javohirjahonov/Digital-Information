@@ -1,4 +1,5 @@
 package com.example.electronic_numbering.service;
+
 import com.example.electronic_numbering.domain.dto.request.MailDto;
 import com.example.electronic_numbering.domain.dto.request.role.RoleDto;
 import com.example.electronic_numbering.domain.dto.request.user.*;
@@ -22,8 +23,10 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
 import java.time.LocalDate;
@@ -44,15 +47,18 @@ public class UserService {
     private final RoleService roleService;
     private final RoleRepository roleRepository;
 
-
+    @Transactional
     public StandardResponse<JwtResponse> save(UserRequestDto userRequestDto) {
         checkUserEmailAndPhoneNumber(userRequestDto.getEmail(), userRequestDto.getPhoneNumber());
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         LocalDate dateOfBirth = LocalDate.parse(userRequestDto.getDateOfBirth(), formatter);
+
         UserEntity userEntity = modelMapper.map(userRequestDto, UserEntity.class);
         userEntity.setState(UserState.UNVERIFIED);
         userEntity.setDateOfBirth(dateOfBirth);
         userEntity.setPassword(passwordEncoder.encode(userRequestDto.getPassword()));
+
         RoleEntity role = roleRepository.findRoleEntitiesByName("USER");
         if (role == null) {
             RoleDto roleDto = RoleDto.builder().name("USER").permissions(List.of("GET", "UPDATE", "DELETE")).build();
@@ -60,28 +66,33 @@ public class UserService {
         }
         userEntity.setRoles(List.of(role));
         userEntity.setPermissions(List.of(role.getPermissions().toArray(new PermissionEntity[0])));
-        if(!(Objects.equals(userRequestDto.getGender(), "MALE") || Objects.equals(userRequestDto.getGender(), "FEMALE"))){
+
+        if (!(Objects.equals(userRequestDto.getGender(), "MALE") || Objects.equals(userRequestDto.getGender(), "FEMALE"))) {
             throw new DataNotFoundException("Gender not found");
         }
         userEntity.setGender(Gender.valueOf(userRequestDto.getGender()));
+
         userEntity = userRepository.save(userEntity);
         sendVerificationCode(userEntity.getEmail());
+
         String accessToken = jwtService.generateAccessToken(userEntity);
         String refreshToken = jwtService.generateRefreshToken(userEntity);
+
         UserDetailsForFront user = mappingUser(userEntity);
         JwtResponse jwtResponse = JwtResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .user(user)
                 .build();
-        return StandardResponse.<JwtResponse> builder()
+
+        return StandardResponse.<JwtResponse>builder()
                 .status(Status.SUCCESS)
                 .message("Successfully signed up")
-                .data(jwtResponse
-                ).build();
+                .data(jwtResponse)
+                .build();
     }
 
-    public UserDetailsForFront mappingUser(UserEntity userEntity){
+    private UserDetailsForFront mappingUser(UserEntity userEntity) {
         UserDetailsForFront map = modelMapper.map(userEntity, UserDetailsForFront.class);
         List<String> roles = new ArrayList<>();
         for (RoleEntity role : userEntity.getRoles()) {
@@ -96,32 +107,21 @@ public class UserService {
         return map;
     }
 
-
+    @Transactional(readOnly = true)
     public StandardResponse<JwtResponse> signIn(LoginRequestDto loginRequestDto) {
         UserEntity userEntity = userRepository.findByEmail(loginRequestDto.getEmail())
                 .orElseThrow(() -> new DataNotFoundException("Incorrect email or password"));
+
         if (userEntity.getState() == UserState.BLOCKED) {
-            throw new AuthenticationFailedException("Your account is blocked. Please contact to admin@gmail.com for further information");
+            throw new AuthenticationFailedException("Your account is blocked. Please contact admin@gmail.com for further information");
         }
+
         if (passwordEncoder.matches(loginRequestDto.getPassword(), userEntity.getPassword())) {
             String accessToken = jwtService.generateAccessToken(userEntity);
             String refreshToken = jwtService.generateRefreshToken(userEntity);
             List<RoleEntity> roles = userEntity.getRoles();
-            if(!roles.isEmpty()){
-                int position = 0;
-                int i = 0;
-                for(RoleEntity role : roles){
-                    if(role.getName().equals("ADMIN")){
-                        position = i;
-                    }
-                    i++;
-                }
-                if(position > 0){
-                    RoleEntity roleEntity = roles.get(0);
-                    RoleEntity admin = roles.get(position);
-                    roles.set(0, admin);
-                    roles.set(position, roleEntity);
-                }
+            if (!roles.isEmpty()) {
+                roles.sort(Comparator.comparing(RoleEntity::getName).reversed());
             }
             UserDetailsForFront user = mappingUser(userEntity);
             JwtResponse jwtResponse = JwtResponse.builder()
@@ -130,26 +130,31 @@ public class UserService {
                     .user(user)
                     .build();
             return StandardResponse.<JwtResponse>builder().status(Status.SUCCESS).message("Successfully signed in").data(jwtResponse).build();
-        }else {
+        } else {
             throw new AuthenticationFailedException("Incorrect username or password");
         }
     }
 
+    @Transactional
     public StandardResponse<UserDetailsForFront> updateProfile(UserUpdateRequest update, Principal principal) {
         UserEntity userEntity = userRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new UserBadRequestException("user not found"));
+
         modelMapper.map(update, userEntity);
         userEntity.setUpdatedDate(LocalDateTime.now());
-        if(update.getDateOfBirth() != null){
+
+        if (update.getDateOfBirth() != null) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
             LocalDate dateOfBirth = LocalDate.parse(update.getDateOfBirth(), formatter);
             userEntity.setDateOfBirth(dateOfBirth);
         }
-        if(update.getGender() != null){
-            if(!(Objects.equals(update.getGender(), "MALE") || Objects.equals(update.getGender(), "FEMALE"))){
+
+        if (update.getGender() != null) {
+            if (!(Objects.equals(update.getGender(), "MALE") || Objects.equals(update.getGender(), "FEMALE"))) {
                 throw new DataNotFoundException("Gender not found");
             }
         }
+
         userRepository.save(userEntity);
 
         return StandardResponse.<UserDetailsForFront>builder().status(Status.SUCCESS)
@@ -158,40 +163,49 @@ public class UserService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public StandardResponse<List<UserEntity>> getAll(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return StandardResponse.<List<UserEntity>>builder().status(Status.SUCCESS)
-                .message("User list "+page+"-page")
+                .message("User list " + page + "-page")
                 .data(userRepository.findAll(pageable).getContent())
                 .build();
     }
-    public StandardResponse<String> sendVerificationCode(String email){
+
+    @Async
+    public StandardResponse<String> sendVerificationCode(String email) {
         UserEntity userEntity = userRepository.findByEmail(email).orElseThrow(() -> new DataNotFoundException("User not found"));
         sendVerification(userEntity, email);
         return StandardResponse.<String>builder().status(Status.SUCCESS).message("Verification code has been sent").build();
     }
-    public StandardResponse<String> sendVerificationCodeToChangeEmail(String email, Principal principal){
+
+    @Async
+    public StandardResponse<String> sendVerificationCodeToChangeEmail(String email, Principal principal) {
         UserEntity user = userRepository.findByEmail(principal.getName()).orElseThrow(() -> new DataNotFoundException("User not found"));
         Optional<UserEntity> userEntity = userRepository.findByEmail(email);
-        if(userEntity.isPresent()) throw new UniqueObjectException("Email already exists");
+        if (userEntity.isPresent()) throw new UniqueObjectException("Email already exists");
         sendVerification(user, email);
         return StandardResponse.<String>builder().status(Status.SUCCESS).message("Verification code has been sent").build();
     }
-    public void sendVerification(UserEntity userEntity, String email){
-        if(verificationRepository.findByUserEmail(userEntity.getEmail()).isPresent()){
-            verificationRepository.delete(verificationRepository.findByUserEmail(userEntity.getEmail()).orElseThrow());
-        }
+
+    private void sendVerification(UserEntity userEntity, String email) {
+        verificationRepository.findByUserEmail(userEntity.getEmail())
+                .ifPresent(verificationRepository::delete);
+
         VerificationEntity verificationEntity = VerificationEntity.builder()
                 .userId(userEntity)
                 .code(generateVerificationCode())
                 .build();
+
         MailDto mailDto = new MailDto();
         mailDto.setEmail(email);
         mailDto.setMessage(verificationEntity.getCode());
+
         verificationRepository.save(verificationEntity);
         mailService.sendMessage(mailDto);
     }
 
+    @Transactional
     public StandardResponse<String> verify(Principal principal, String code) {
         VerificationEntity entity = verificationRepository.findByUserEmail(principal.getName())
                 .orElseThrow(() -> new DataNotFoundException("Verification code Not Found!"));
@@ -211,21 +225,22 @@ public class UserService {
         throw new UserBadRequestException("Wrong Verification Code!");
     }
 
-    public StandardResponse<String> forgottenPassword(String  email) {
+    @Transactional
+    public StandardResponse<String> forgottenPassword(String email) {
         userRepository.findByEmail(email)
                 .orElseThrow(() -> new DataNotFoundException("User not found"));
-        Optional<VerificationEntity> byUserEmail = verificationRepository.findByUserEmail(email);
-        if(byUserEmail.isPresent()){
-            verificationRepository.delete(byUserEmail.orElseThrow());
-        }
+        verificationRepository.findByUserEmail(email).ifPresent(verificationRepository::delete);
         sendVerificationCode(email);
         return StandardResponse.<String>builder().status(Status.SUCCESS).message("Verification code has been sent").build();
     }
 
+    @Transactional
     public StandardResponse<String> verifyPasswordForUpdatePassword(VerifyCodeDto verifyCodeDto) {
         checkVerificationCode(verifyCodeDto);
         return StandardResponse.<String>builder().status(Status.SUCCESS).message("Successfully verified").build();
     }
+
+    @Transactional
     public StandardResponse<String> verifyCodeForChangingEmail(VerifyCodeDto verifyCodeDto, Principal principal) {
         String newEmail = verifyCodeDto.getEmail();
         verifyCodeDto.setEmail(principal.getName());
@@ -236,9 +251,9 @@ public class UserService {
         return StandardResponse.<String>builder().status(Status.SUCCESS).message("Email successfully changed").build();
     }
 
-    public void checkVerificationCode(VerifyCodeDto verifyCodeDto) {
+    private void checkVerificationCode(VerifyCodeDto verifyCodeDto) {
         VerificationEntity entity = verificationRepository.findByUserEmail(verifyCodeDto.getEmail())
-                .orElseThrow(() -> new DataNotFoundException("Verification code doesn't exists or expired"));
+                .orElseThrow(() -> new DataNotFoundException("Verification code doesn't exist or expired"));
         if (verifyCodeDto.getCode().equals(entity.getCode())) {
             if (entity.getCreatedDate().plusMinutes(10).isAfter(LocalDateTime.now())) {
                 verificationRepository.delete(entity);
@@ -250,6 +265,7 @@ public class UserService {
         throw new UserBadRequestException("Wrong Verification Code!");
     }
 
+    @Transactional
     public StandardResponse<String> updatePassword(UpdatePasswordDto updatePasswordDto) {
         UserEntity user = userRepository.findByEmail(updatePasswordDto.getEmail())
                 .orElseThrow(() -> new DataNotFoundException("User not found"));
@@ -260,39 +276,47 @@ public class UserService {
         return StandardResponse.<String>builder().status(Status.SUCCESS).message("Successfully updated").build();
     }
 
-    public String generateVerificationCode() {
+    private String generateVerificationCode() {
         Random random = new Random(System.currentTimeMillis());
         int code = random.nextInt(1000000);
         return String.format("%06d", code);
     }
 
-    public void checkUserEmailAndPhoneNumber(String email, String phoneNumber) {
+    private void checkUserEmailAndPhoneNumber(String email, String phoneNumber) {
         if (userRepository.findByEmail(email).isPresent()) {
-            throw new UserBadRequestException("email already exists");
+            throw new UserBadRequestException("Email already exists");
         }
         if (userRepository.findUserEntityByPhoneNumber(phoneNumber).isPresent()) {
-            throw new UserBadRequestException("phone number already exists");
+            throw new UserBadRequestException("Phone number already exists");
         }
     }
 
+    @Transactional(readOnly = true)
     public StandardResponse<JwtResponse> getNewAccessToken(Principal principal) {
         UserEntity userEntity = userRepository.findByEmail(principal.getName())
-                .orElseThrow(() -> new DataNotFoundException("user not found"));
+                .orElseThrow(() -> new DataNotFoundException("User not found"));
         String accessToken = jwtService.generateAccessToken(userEntity);
         JwtResponse jwtResponse = JwtResponse.builder().accessToken(accessToken).build();
         return StandardResponse.<JwtResponse>builder().status(Status.SUCCESS).message("Access token successfully sent").data(jwtResponse).build();
     }
+
+    @Transactional(readOnly = true)
     public UUID sendId(String email) {
         return userRepository.findByEmail(email).orElseThrow(() -> new DataNotFoundException("User not found")).getId();
     }
+
+    @Transactional(readOnly = true)
     public StandardResponse<UserDetailsForFront> getMeByToken(String email) {
         UserEntity userEntity = userRepository.findByEmail(email).orElseThrow(() -> new DataNotFoundException("User not found"));
         return StandardResponse.<UserDetailsForFront>builder().status(Status.SUCCESS).message("User entity").data(mappingUser(userEntity)).build();
     }
-    public String sendEmail(UUID userId){
+
+    @Transactional(readOnly = true)
+    public String sendEmail(UUID userId) {
         return userRepository.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found")).getEmail();
     }
 
+    @Transactional(readOnly = true)
     public UserResponseForFront sendUser(UUID userId) {
         UserEntity user = userRepository.getUserById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
         return UserResponseForFront.builder()
@@ -301,10 +325,11 @@ public class UserService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public StandardResponse<Boolean> checkPassword(CheckPasswordDto checkPasswordDto, Principal principal) {
         UserEntity userEntity = userRepository.findByEmail(principal.getName()).orElseThrow(() -> new DataNotFoundException("User not found"));
         boolean matches = passwordEncoder.matches(checkPasswordDto.getPassword(), userEntity.getPassword());
-        if(!matches) throw new UserBadRequestException("Password not matches");
+        if (!matches) throw new UserBadRequestException("Password does not match");
         return StandardResponse.<Boolean>builder().status(Status.SUCCESS).message("Password matches").data(true).build();
     }
 }
