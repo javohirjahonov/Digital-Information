@@ -16,6 +16,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -27,7 +29,7 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .cors(cors -> cors.disable()) // Disable CORS completely
+                .cors(withDefaults()) // Enable CORS with default configuration
                 .csrf().disable()
                 .authorizeHttpRequests(authorize -> {
                     authorize
@@ -42,10 +44,9 @@ public class SecurityConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // Implement CORS policy as needed
         registry.addMapping("/**")
-                .allowedOriginPatterns("*") // Adjust the pattern to match your domain(s)
-                .allowedMethods("GET", "POST", "PUT", "DELETE")
+                .allowedOriginPatterns("https://elektron-raqamlastirish.netlify.app") // Allow specific origin
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders(HttpHeaders.AUTHORIZATION)
                 .allowCredentials(true)
