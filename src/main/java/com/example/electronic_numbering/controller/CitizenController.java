@@ -35,13 +35,9 @@ public class CitizenController {
     @PostMapping("/addCitizen")
     @PreAuthorize(value = "hasRole('USER')")
     public StandardResponse<CitizenEntity> addCitizen(
-            @Valid @RequestBody CitizenCreateDto citizenCreateDto,
-            BindingResult bindingResult
+            @RequestBody CitizenCreateDto citizenCreateDto
+
     ) throws RequestValidationException {
-        if (bindingResult.hasErrors()){
-            List<ObjectError> allErrors = bindingResult.getAllErrors();
-            throw new RequestValidationException(allErrors);
-        }
         return citizenService.addCitizen(citizenCreateDto);
     }
 

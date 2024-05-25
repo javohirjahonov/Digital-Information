@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -27,16 +28,17 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .cors().and() // Enable CORS with default settings
+                .cors(Customizer.withDefaults())
                 .csrf().disable()
-                .authorizeHttpRequests(authorize -> {
-                    authorize
+                .authorizeHttpRequests((authorizer) -> {
+                    authorizer
                             .requestMatchers(permitAll).permitAll()
-                            .requestMatchers(HttpMethod.OPTIONS).permitAll()
                             .anyRequest().authenticated();
+
                 })
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(new JwtFilterToken(authenticationService, jwtService), UsernamePasswordAuthenticationFilter.class)
+                .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(new JwtFilterToken(authenticationService, jwtService),
+                        UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
