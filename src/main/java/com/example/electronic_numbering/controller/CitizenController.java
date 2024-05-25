@@ -17,14 +17,12 @@ import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,6 +33,7 @@ public class CitizenController {
     private final CitizenService citizenService;
 
     @PostMapping("/addCitizen")
+    @PreAuthorize(value = "hasRole('USER')")
     public StandardResponse<CitizenEntity> addCitizen(
             @Valid @RequestBody CitizenCreateDto citizenCreateDto,
             BindingResult bindingResult
