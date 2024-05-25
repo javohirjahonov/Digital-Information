@@ -27,28 +27,32 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .cors(cors -> cors.disable()) // Disable CORS completely
+                .cors().and() // Enable CORS with default settings
                 .csrf().disable()
                 .authorizeHttpRequests(authorize -> {
                     authorize
-                            .requestMatchers(permitAll).permitAll() // Allow predefined paths
-                            .requestMatchers(HttpMethod.OPTIONS).permitAll() // Allow OPTIONS preflight
-                            .anyRequest().authenticated(); // Require authentication for all other requests
+                            .requestMatchers(permitAll).permitAll()
+                            .requestMatchers(HttpMethod.OPTIONS).permitAll()
+                            .anyRequest().authenticated();
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(new JwtFilterToken(authenticationService, jwtService), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOriginPatterns("https://elektron-raqamlastirish.netlify.app") // Allow specific origin
-                .allowedOriginPatterns("http://127.0.0.1:5173") // Allow specific origin
+                .allowedOrigins(
+                        "https://elektron-raqamlastirish.netlify.app",
+                        "http://127.0.0.1:5173"
+                )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders(HttpHeaders.AUTHORIZATION)
                 .allowCredentials(true)
                 .maxAge(3600);
     }
+
 }
