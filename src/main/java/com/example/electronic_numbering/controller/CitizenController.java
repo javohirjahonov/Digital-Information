@@ -33,7 +33,6 @@ public class CitizenController {
     private final CitizenService citizenService;
 
     @PostMapping("/addCitizen")
-    @PreAuthorize(value = "hasRole('USER')")
     public StandardResponse<CitizenEntity> addCitizen(
             @RequestBody CitizenCreateDto citizenCreateDto
 
