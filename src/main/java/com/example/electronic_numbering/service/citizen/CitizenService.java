@@ -117,7 +117,7 @@ public class CitizenService {
         PdfWriter.getInstance(document, outputStream);
         document.open();
 
-        String hasCadastreDisplay = citizenEntity.isHasCadastre() ? "Yes" : "No";
+        String hasCadastreDisplay = citizenEntity.isHasCadastre() ? "Ha" : "Yo'q";
         // Font settings
         Font boldFont = new Font(Font.FontFamily.TIMES_ROMAN, 12, Font.BOLD);
         Font normalFont = new Font(Font.FontFamily.TIMES_ROMAN, 12, Font.NORMAL);
