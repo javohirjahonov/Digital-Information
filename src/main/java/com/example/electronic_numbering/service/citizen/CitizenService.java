@@ -7,6 +7,9 @@ import com.example.electronic_numbering.domain.entity.citizen.CitizenEntity;
 import com.example.electronic_numbering.exception.DataNotFoundException;
 import com.example.electronic_numbering.exception.UserBadRequestException;
 import com.example.electronic_numbering.repository.CitizenRepository;
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -19,9 +22,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfWriter;
 
 import java.io.ByteArrayOutputStream;
@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -116,22 +117,55 @@ public class CitizenService {
         PdfWriter.getInstance(document, outputStream);
         document.open();
 
-        // Add citizen information to the document as paragraphs
-        document.add(new Paragraph("Ism Familiya: " + citizenEntity.getFullName()));
-        document.add(new Paragraph("Viloyat: " + citizenEntity.getRegion()));
-        document.add(new Paragraph("Tuman: " + citizenEntity.getCitizenDistrict()));
-        document.add(new Paragraph("Mahalla: " + citizenEntity.getCitizensNeighborhood()));
-        document.add(new Paragraph("Honadon kodi: " + citizenEntity.getHomeCode()));
-        document.add(new Paragraph("Kadastr bormi : " + citizenEntity.isHasCadastre()));
-        document.add(new Paragraph("Telefon raqami: " + citizenEntity.getPhoneNumber()));
-        document.add(new Paragraph("Chet elda mavjud honadon a'zolari soni: " + citizenEntity.getTheNumberOfHouseholdsInAForeignCountry()));
-        document.add(new Paragraph("Honadon manzili: " + citizenEntity.getHomeAddress()));
-        document.add(new Paragraph("Honadon raqami: " + citizenEntity.getHomeNumber()));
-        document.add(new Paragraph("Honadon manzili: " + citizenEntity.getHomeLocation()));
+        String hasCadastreDisplay = citizenEntity.isHasCadastre() ? "Yes" : "No";
+        // Font settings
+        Font boldFont = new Font(Font.FontFamily.TIMES_ROMAN, 12, Font.BOLD);
+        Font normalFont = new Font(Font.FontFamily.TIMES_ROMAN, 12, Font.NORMAL);
+
+        // Create a table with 2 columns
+        PdfPTable table = new PdfPTable(2);
+        table.setWidthPercentage(100);
+        table.setSpacingBefore(10f);
+        table.setSpacingAfter(10f);
+
+        // Define column widths
+        float[] columnWidths = {1f, 2f};
+        table.setWidths(columnWidths);
+
+        // Add table headers
+        table.addCell(new PdfPCell(new Phrase("Attribute", boldFont)));
+        table.addCell(new PdfPCell(new Phrase("Value", boldFont)));
+
+        // Add rows
+        addTableEntry(table, "Familiya Ism:", citizenEntity.getFullName(), normalFont);
+        addTableEntry(table, "Viloyat:", citizenEntity.getRegion(), normalFont);
+        addTableEntry(table, "Tuman:", citizenEntity.getCitizenDistrict(), normalFont);
+        addTableEntry(table, "Mahalla:", citizenEntity.getCitizensNeighborhood(), normalFont);
+        addTableEntry(table, "Yashash joyi:", citizenEntity.getHomeLocation(), normalFont);
+        addTableEntry(table, "Xonadon kodi:", citizenEntity.getHomeCode(), normalFont);
+        addTableEntry(table, "Telefon raqami:", citizenEntity.getPhoneNumber(), normalFont);
+        addTableEntry(table, "Uy raqami:", citizenEntity.getHomeNumber(), normalFont);
+        addTableEntry(table, "Kadastr:", hasCadastreDisplay, normalFont);
+        addTableEntry(table, "Chet davlatda:", citizenEntity.getTheNumberOfHouseholdsInAForeignCountry(), normalFont);
+        addTableEntry(table, "Uy manzili:", citizenEntity.getHomeAddress(), normalFont);
+
+        // Add table to document
+        document.add(table);
 
         document.close();
-
         return new ByteArrayResource(outputStream.toByteArray());
+    }
+
+    private void addTableEntry(PdfPTable table, String header, String content, Font font) {
+        PdfPCell headerCell = new PdfPCell(new Phrase(header, font));
+        headerCell.setBorderColor(BaseColor.LIGHT_GRAY);
+        headerCell.setPadding(5);
+        table.addCell(headerCell);
+
+        PdfPCell contentCell = new PdfPCell(new Phrase(content, font));
+        contentCell.setBorderColor(BaseColor.LIGHT_GRAY);
+        contentCell.setPadding(5);
+        table.addCell(contentCell);
     }
 
     @Transactional(readOnly = true)
