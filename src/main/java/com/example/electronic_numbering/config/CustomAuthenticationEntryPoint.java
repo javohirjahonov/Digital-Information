@@ -1,4 +1,4 @@
-package com.instantlyinc.delivery.config.security;
+package com.example.electronic_numbering.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;

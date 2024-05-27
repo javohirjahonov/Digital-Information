@@ -33,8 +33,9 @@ public class CitizenController {
     private final CitizenService citizenService;
 
     @PostMapping("/addCitizen")
+    @PreAuthorize("hasRole('USER')")
     public StandardResponse<CitizenEntity> addCitizen(
-            @RequestBody CitizenCreateDto citizenCreateDto
+            @Valid @RequestBody CitizenCreateDto citizenCreateDto
 
     ) throws RequestValidationException {
         return citizenService.addCitizen(citizenCreateDto);
@@ -45,7 +46,7 @@ public class CitizenController {
             @Valid @RequestBody CitizenUpdateRequest update,
             @RequestParam UUID homeId,
             BindingResult bindingResult
-    )throws RequestValidationException {
+    ) throws RequestValidationException {
         if (bindingResult.hasErrors()) {
             List<ObjectError> allErrors = bindingResult.getAllErrors();
             throw new RequestValidationException(allErrors);

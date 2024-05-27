@@ -55,7 +55,7 @@ public class SecurityConfig {
     }
 
     private AuthenticationEntryPoint authenticationEntryPoint() {
-        return new com.instantlyinc.delivery.config.security.CustomAuthenticationEntryPoint(objectMapper);
+        return new CustomAuthenticationEntryPoint(objectMapper);
     }
 
     @Bean
