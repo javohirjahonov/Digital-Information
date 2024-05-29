@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -145,6 +144,7 @@ public class CitizenService {
         addTableEntry(table, "Xonadon kodi:", citizenEntity.getHomeCode(), normalFont);
         addTableEntry(table, "Telefon raqami:", citizenEntity.getPhoneNumber(), normalFont);
         addTableEntry(table, "Uy raqami:", citizenEntity.getHomeNumber(), normalFont);
+        addTableEntry(table, "Oiladagilar soni:", citizenEntity.getNumberOfFamilyMembers(), normalFont);
         addTableEntry(table, "Kadastr:", hasCadastreDisplay, normalFont);
         addTableEntry(table, "Chet davlatda:", citizenEntity.getTheNumberOfHouseholdsInAForeignCountry(), normalFont);
         addTableEntry(table, "Uy manzili:", citizenEntity.getHomeAddress(), normalFont);
